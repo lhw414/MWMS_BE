@@ -1,0 +1,119 @@
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root@rackvisor_db:3306/my_db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                   Int            @id @default(autoincrement())
+  militarySerialNumber String         @unique
+  password             String
+  salt                 String
+  name                 String
+  rank                 String
+  reigment             String
+  position             String
+  units                UsersOnUnits[]
+  Post                 Post[]
+  Stock                Stock[]
+}
+
+model Unit {
+  id         Int            @id @default(autoincrement())
+  name       String         @unique
+  comment    String?
+  warehouses Warehouse[]
+  users      UsersOnUnits[]
+  History    History[]
+  Post       Post[]
+}
+
+model UsersOnUnits {
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  unit   Unit @relation(fields: [unitId], references: [id])
+  unitId Int
+
+  @@id([userId, unitId])
+}
+
+model Warehouse {
+  id                   Int     @id @default(autoincrement())
+  name                 String
+  comment              String?
+  layout               String? @db.MediumText
+  itemlist             String? @db.MediumText
+  storedUnit           Unit    @relation(fields: [storedUnitId], references: [id])
+  storedUnitId         Int
+  racks                Rack[]
+  warehouseImageBinary Bytes?
+}
+
+model Rack {
+  id                Int       @id @default(autoincrement())
+  name              String
+  layout            String?   @db.MediumText
+  storedWarehouse   Warehouse @relation(fields: [storedWarehouseId], references: [id])
+  storedWarehouseId Int
+  boxes             Box[]
+}
+
+model Box {
+  id           Int     @id @default(autoincrement())
+  name         String
+  storedRack   Rack    @relation(fields: [storedRackId], references: [id])
+  storedRackId Int
+  stocks       Stock[]
+}
+
+model Stock {
+  id             Int       @id @default(autoincrement())
+  name           String
+  type           StockType
+  specipicType   String
+  amount         Int       @default(1)
+  barcode        String?
+  comment        String?
+  expirationDate DateTime?
+  storedBox      Box       @relation(fields: [storedBoxId], references: [id])
+  storedBoxId    Int
+  createdUser    User      @relation(fields: [createdUserId], references: [id])
+  createdUserId  Int
+}
+
+model Post {
+  id            Int      @id @default(autoincrement())
+  title         String
+  content       String
+  createdAt     DateTime @default(now())
+  author        User     @relation(fields: [authorId], references: [id])
+  authorId      Int
+  postingUnit   Unit     @relation(fields: [postingUnitId], references: [id])
+  postingUnitId Int
+}
+
+model History {
+  id         Int      @id @default(autoincrement())
+  content    String
+  createdAt  DateTime @default(now())
+  storedUnit Unit     @relation(fields: [unitId], references: [id])
+  unitId     Int
+}
+
+enum StockType {
+  TYPE_NULL
+  TYPE_1
+  TYPE_2
+  TYPE_3
+  TYPE_4
+  TYPE_5
+  TYPE_6
+  TYPE_7
+  TYPE_8
+  TYPE_9
+  TYPE_10
+  //todo 물품 타입 정의
+}
